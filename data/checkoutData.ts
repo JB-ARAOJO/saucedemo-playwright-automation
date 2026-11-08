@@ -1,8 +1,8 @@
 export const CheckoutData = {
     summary: { taxRate: 0.08 },
     validData:{
-        firstname:'Sofie',
-        lastname:'Villalobos',
+        firstname:'Valid',
+        lastname:'User',
         postalcode:'4026',
         checkoutmessage: 'Thank you for your order!'
     },
