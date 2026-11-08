@@ -1,0 +1,1 @@
+export const STORAGE_STATE = 'playwright/.auth/standardUser.json';
