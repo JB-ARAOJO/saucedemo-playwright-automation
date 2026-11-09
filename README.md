@@ -53,7 +53,7 @@ The framework is deliberately engineered to industry standards:
 | **Readability** | Specs read as user stories: Arrange → Act → Assert |
 | **Reliability** | Falsifiable guards, scope-safe locators, no debug noise in CI output |
 
-**Suite status (last verified Sun Nov 8 2026):** 45 test cases → **147 test runs passing** across 6 projects (1 setup + 10 login + 15 inventory + 5 cart + 10 checkout + 4 menu), 0 flaky / 0 retries, `fullyParallel: true` + `workers: 4`, `npm run typecheck` clean.
+**Suite status (last verified Mon Nov 9 2026):** 46 test cases → **151 test runs** across 6 projects (1 setup + 10 login + 15 inventory + 5 cart + 11 checkout + 4 menu), `fullyParallel: true` + `workers: 4`, `npm run typecheck` clean. Every test verified passing during the Nov 9 session — the host was degraded that day (5 bare runs scored 143–150/151, all failures load-shaped timeouts that passed on re-run; see [Known Limitations](#known-limitations)).
 
 ---
 
@@ -68,7 +68,7 @@ The framework is deliberately engineered to industry standards:
 - ✅ **Money math in integer cents** — exact `toBe` assertions, no float drift, no `toBeCloseTo`
 - ✅ **Poll-based async assertions** — image-load checks poll `complete && naturalWidth > 0`
 - ✅ **Strict locator scoping** — CSS class scopes where testids are shared across components
-- ✅ **Cross-browser projects** — Desktop Chrome, Firefox, WebKit and Mobile Chrome all run the authenticated suite (45 cases → 147 runs)
+- ✅ **Cross-browser projects** — Desktop Chrome, Firefox, WebKit and Mobile Chrome all run the authenticated suite (46 cases → 151 runs)
 - ✅ **HTML + list reporters, trace-on-failure** for failure diagnostics — every failure keeps a trace, not just retries
 - ✅ **Strict TypeScript** with `npm run typecheck` gate
 - ✅ **Zero `console.log` noise** in project code
@@ -113,7 +113,7 @@ npm run typecheck
 npm test
 ```
 
-Expected result: **147/147 passing** (45 test cases across 6 projects — usually 4–10 min, depending on how `saucedemo.com` is behaving), then open the report with:
+Expected result: **151/151 passing** (46 test cases across 6 projects — usually 4–10 min, depending on how `saucedemo.com` is behaving), then open the report with:
 
 ```bash
 npm run report
@@ -164,8 +164,7 @@ playwright-ts/
 ├── playwright-report/            # HTML report output (gitignored)
 ├── test-results/                 # Traces/videos on failure (gitignored)
 │
-├── PROGRESS.md                   # Day-by-day build & learning journal
-└── TODO.md                       # Task tracker / backlog
+└── PROGRESS.md                   # Day-by-day build & learning journal
 ```
 
 ---
@@ -299,7 +298,7 @@ Configured in `playwright.config.ts`:
 | `webkit` | `tests/authenticated/**/*.spec.ts` | `STORAGE_STATE` | `setup` | Same authenticated suite on Desktop Safari (`devices['Desktop Safari']`) |
 | `Mobile Chrome` | `tests/authenticated/**/*.spec.ts` | `STORAGE_STATE` | `setup` | Same authenticated suite on Pixel 5 (`devices['Pixel 5']`) |
 
-Projects 4–6 re-run the 34 authenticated cases in three more engines: **45 test cases → 147 test runs** per `npm test`.
+Projects 4–6 re-run the 35 authenticated cases in three more engines: **46 test cases → 151 test runs** per `npm test`.
 
 ### Test Suites
 
@@ -309,11 +308,11 @@ Projects 4–6 re-run the 34 authenticated cases in three more engines: **45 tes
 | 2 | Login | `tests/unauthenticated/login.spec.ts` | `chromium-unauthenticated` | 10 | Credentials, error paths, route guard |
 | 3 | Inventory | `tests/authenticated/inventory.spec.ts` | `chromium-authenticated` | 15 | Catalog, cart badge, sorting, details, data integrity |
 | 4 | Cart | `tests/authenticated/cart.spec.ts` | `chromium-authenticated` | 5 | Cart contents, remove, continue/checkout navigation |
-| 5 | Checkout | `tests/authenticated/checkout.spec.ts` | `chromium-authenticated` | 10 | Validation, happy path, cancel, totals math |
+| 5 | Checkout | `tests/authenticated/checkout.spec.ts` | `chromium-authenticated` | 11 | Validation, happy path, cancel, totals math |
 | 6 | Menu | `tests/authenticated/menu.spec.ts` | `chromium-authenticated` | 4 | Logout, reset state, sidebar navigation |
-| | | | | **45 cases → 147 runs** | |
+| | | | | **46 cases → 151 runs** | |
 
-> Rows 3–6 (34 tests) additionally run under the `firefox`, `webkit` and `Mobile Chrome` projects — `45 + (34 × 3) = 147` runs per bare `npm test`.
+> Rows 3–6 (35 tests) additionally run under the `firefox`, `webkit` and `Mobile Chrome` projects — `46 + (35 × 3) = 151` runs per bare `npm test`.
 
 ### Test Entry Styles
 
@@ -379,20 +378,21 @@ Two deliberate styles for reaching the page under test — decided **per test**,
 | 4 | Verify user can check out item | URL → `/checkout-step-one.html` |
 | 5 | Verify checkout attempt with no items in cart | Empty cart still reaches `/checkout-step-one.html` |
 
-### 5. Checkout — `checkout.spec.ts` (10) · *authenticated*
+### 5. Checkout — `checkout.spec.ts` (11) · *authenticated*
 
 | # | Test | Type | Assertion |
 |---|---|---|---|
 | 1 | Verify clicking continue with empty fields display error message | Validation | Error: *First Name is required* |
 | 2 | Validate Empty First Name | Validation | Error: *First Name is required* (2 of 3 fields filled) |
 | 3 | Validate Empty Last Name | Validation | Error: *Last Name is required* |
-| 4 | Verify checkout step one with valid inputs | Happy path | Journey → valid details → URL → `/checkout-step-two.html` |
-| 5 | Verify checkout step two with valid inputs | Happy path | Overview shows item → Finish → `/checkout-complete.html` + *Thank you for your order!* |
-| 6 | Verify cancel button working | Cancel | Step-one Cancel → `/cart.html` + item still in cart |
-| 7 | Verify overview cancel button returns to inventory with cart intact | Cancel | Step-two Cancel → `/inventory.html` + badge = 1 |
-| 8 | Verify confirmation page returns to inventory with empty cart | Journey | Finish → Back Home → `/inventory.html` + **no** badge |
-| 9 | Verify item total equals the sum of item prices | Calculation | 2-item cart: Σ item prices = displayed item total (integer cents) |
-| 10 | Verify Tax and grand total calculated correctly | Calculation | tax = 8% of subtotal (rate asserted) · subtotal + tax = total |
+| 4 | Validate Empty Postal Code | Validation | Error: *Postal Code is required* (2 of 3 fields filled) |
+| 5 | Verify checkout step one with valid inputs | Happy path | Journey → valid details → URL → `/checkout-step-two.html` |
+| 6 | Verify checkout step two with valid inputs | Happy path | Overview shows item → Finish → `/checkout-complete.html` + *Thank you for your order!* |
+| 7 | Verify cancel button working | Cancel | Step-one Cancel → `/cart.html` + item still in cart |
+| 8 | Verify overview cancel button returns to inventory with cart intact | Cancel | Step-two Cancel → `/inventory.html` + badge = 1 |
+| 9 | Verify confirmation page returns to inventory with empty cart | Journey | Finish → Back Home → `/inventory.html` + **no** badge |
+| 10 | Verify item total equals the sum of item prices | Calculation | 2-item cart: Σ item prices = displayed item total (integer cents) |
+| 11 | Verify Tax and grand total calculated correctly | Calculation | tax = 8% of subtotal (rate asserted) · subtotal + tax = total |
 
 ### 6. Menu / Session — `menu.spec.ts` (4) · *authenticated*
 
@@ -446,9 +446,10 @@ All expected values are centralized in `data/` — specs and POMs contain **no r
 | Key | Value |
 |---|---|
 | `summary.taxRate` | `0.08` (8%) |
-| `validData` | Sofie · Villalobos · `4026` → *Thank you for your order!* |
-| `emptyFirstName` | `''` · Villalobos · `4026` → *Error: First Name is required* |
-| `emptyLastName` | Sofie · `''` · `4026` → *Error: Last Name is required* |
+| `validData` | Valid · User · `4026` → *Thank you for your order!* |
+| `emptyFirstName` | `''` · User · `4026` → *Error: First Name is required* |
+| `emptyLastName` | Valid · `''` · `4026` → *Error: Last Name is required* |
+| `emptyPostalCode` | Valid · User · `''` → *Error: Postal Code is required* |
 | `emptyField` | → *Error: First Name is required* |
 
 > **Data provenance rule:** expected values are read from the **live site** (DevTools / served JS bundle), never from memory. Pinned values are re-verified when the site changes — the catalog already moved once (Backpack `$49.99` → `$29.99`).
@@ -486,7 +487,7 @@ All expected values are centralized in `data/` — specs and POMs contain **no r
 
 | Command | What it does |
 |---|---|
-| `npm test` | Run the **full** suite (setup → unauthenticated → authenticated; 45 cases → 147 runs across 6 projects) |
+| `npm test` | Run the **full** suite (setup → unauthenticated → authenticated; 46 cases → 151 runs across 6 projects) |
 | `npm run typecheck` | TypeScript strict check (`tsc --noEmit`) — run before committing |
 | `npm run test:ui` | Interactive Playwright UI mode (watch, pick, debug) |
 | `npm run test:headed` | Run with a visible browser window |
@@ -530,7 +531,7 @@ npx playwright test --list
 - **HTML report** → `playwright-report/index.html` (open via `npm run report`), plus live console output from the `list` reporter
 - **Traces** → captured `retain-on-failure`; inspect with `npx playwright show-trace test-results/<test>/trace.zip`
 - **Artifacts on failure** → `test-results/`
-- **Last verified run** (bare `npm test`, Sun Nov 8 2026, 11:12 PM): **147 passed** · 0 flaky · 0 retries · `npm run typecheck` clean — with `fullyParallel: true` and `workers: 4`
+- **Last verified session** (Mon Nov 9 2026): 46 cases → 151 runs; `npm run typecheck` clean — with `fullyParallel: true` and `workers: 4`. Caveat: saucedemo.com was degraded that day — 5 bare runs scored 143–150/151 with all 18 failures load-shaped timeouts (no assertion mismatches), each failure passed again on re-run or in another run. For a clean single-run record see the Nov 8 entry in [`PROGRESS.md`](PROGRESS.md) (147/147 at the time, 45 cases).
 
 ---
 
@@ -586,7 +587,7 @@ Condensed from the framework's build journal ([`PROGRESS.md`](PROGRESS.md)):
 
 ## Known Limitations
 
-- **Cross-browser, but not exhaustive** — the 34 authenticated tests run on Chromium, Firefox, WebKit and Mobile Chrome (147 runs); login stays Chromium-only by design (session behaviour isn't browser-specific), and Mobile Safari / Pixel 5 on iOS are still commented out.
+- **Cross-browser, but not exhaustive** — the 35 authenticated tests run on Chromium, Firefox, WebKit and Mobile Chrome (151 runs); login stays Chromium-only by design (session behaviour isn't browser-specific), and Mobile Safari / Pixel 5 on iOS are still commented out.
 - **Live-site dependency** — tests hit `saucedemo.com`; duration and stability depend on the public host (observed swings: 38 s → 9.8 min for the identical suite). A run on Nov 8 failed on `Test timeout of 30000ms exceeded` with zero assertion mismatches and passed unchanged on re-run — a network blip, not a code defect. Locally `retries: 0`, so there is no second chance; re-run before debugging.
 - **Pinned data can rot** — catalog prices/URLs must be re-verified when the site changes.
 

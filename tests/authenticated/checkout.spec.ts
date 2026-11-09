@@ -71,6 +71,18 @@ test.describe('CheckOut Page', () =>{
         await checkoutPage.expectError(checkoutData.expectedError);
     })
 
+    test('Validate Empty Postal Code', async({checkoutPage}) => {
+        const checkoutData = CheckoutData.emptyPostalCode;
+
+        await checkoutPage.goto();
+        await checkoutPage.expectLoaded();
+        await checkoutPage.fillFirstName(checkoutData.firstname);
+        await checkoutPage.fillLastName(checkoutData.lastname);
+        await checkoutPage.fillPostalCode(checkoutData.postalcode);
+        await checkoutPage.clickContinueBtn();
+        await checkoutPage.expectError(checkoutData.expectedError);
+    })
+
     //checkout step one
     test('Verify checkout step one with valid inputs',async ({inventoryPage, cartPage, checkoutPage})=>{  
         await startCheckoutAtStepOne(inventoryPage, cartPage, checkoutPage);

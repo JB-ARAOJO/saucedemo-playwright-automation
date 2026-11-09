@@ -336,3 +336,31 @@ Chronological — earliest at top, newest at bottom. Append each session at the 
 **Open / next**
 - GitHub Actions CI workflow — being handled separately, out of scope for this session
 - `TODO.md` still carries three stale boxes (Bug 2 promoted → done; stress runs → declined; `Math.random` → kept) — not touched here, pending a pass of its own
+
+---
+
+## Mon Nov 9, 2026 — Postal-code test, CI closed, 46/151 verified under a degraded host
+
+**Accomplished**
+- **46th test:** `Validate Empty Postal Code` (`tests/authenticated/checkout.spec.ts`) + `CheckoutData.emptyPostalCode` (`Error: Postal Code is required`) — closes the last coverage gap: all three validation tests had previously *filled* the postal code, so the empty-postal branch was never exercised. Built to the exact pattern of its two siblings (Style B `goto()` → `expectLoaded()` → fill 2 of 3 → continue → `expectError`).
+- **Git divergence reconciled** — `main` was ahead 3 / behind 3 with byte-identical trees (rewritten SHAs, likely commits made outside the local clone). Resolved; `main` back in sync with `origin/main`.
+- **CI milestone closed.** The Nov 8 session deferred CI as "handled separately"; verified for the record: `.github/workflows/ci.yml` pushed and **GitHub Actions run #1 completed successfully** (2m 26s, Nov 8) — typecheck gate, 147 tests, failure artifacts on red.
+- **Bookkeeping pass** (the item PROGRESS Nov 8 left "pending a pass of its own"): `TODO.md`'s false `Math.random` tick corrected — the decision was **keep**, not "remove"; stress-run and Bug-2 boxes reworded to record their decisions; CI box annotated with run #1's result.
+- **README synced 45/147 → 46/151** everywhere (suite status, Features, Getting Started, Projects table, Test Suites totals, checkout table + row 11, Running Tests, Reporting, Known Limitations). Also caught stale data while in there: the CheckoutData table still said *Sofie · Villalobos* — the live file holds *Valid · User*; fixed and the new `emptyPostalCode` row added.
+- **Verification:** `npm run typecheck` clean · **5 bare `npm test` runs → 150, 148, 143, 149, 147 / 151**, plus 3 targeted re-runs (all green).
+
+**Learned**
+- **Load-shaped failures cluster and masquerade as regressions.** Every one of the 18 failure instances was the same signature class — `element(s) not found` at `expectLoaded()` or `Test timeout of 30000ms exceeded`, *before any assertion ran*. Zero assertion mismatches. The tell was in the passing tests: firefox taking 20–36s against its usual 5–10s. A test that fails on *what the page said* is a bug; a test that fails on *how long it took* is the network — the Nov 8 rule, but this time observed as a **trend across 5 runs** rather than a single blip (1 → 3 → 8 → 2 → 4 failures).
+- **"Re-run once" scales to "re-run the failures, then believe the aggregate."** Targeted re-run batches were the real evidence: 1 + 3 + 8 failures re-run green in three batches. Across 755 test executions (5 × 151), every one of the 151 tests passed in at least one run and every failure passed again on re-run — that aggregate, not any single run's number, is what proves the suite. (Checked and corrected mid-write: "no test failed twice in a row" was *false* — `Validate Empty Last Name` failed on firefox in runs 2 **and** 3. A true-sounding tally must be counted, not remembered.)
+- **A degraded host changes the *shape* of a suite's runtime, not just a few tests.** When every browser slows down together, fixed timeouts (`expect` 5s, test 30s) become the failure site — the assertions never get a chance to be wrong.
+- **Bookkeeping triage:** a ticked box is a claim. `Remove Math.random()` was ticked while the decision was *keep* — same defect class as "docs said 38 while code held 40": the box recorded an intent, not an outcome. Ticks now carry the decision (`kept by decision Nov 8`).
+
+**Blockers & decisions**
+- **5 bare runs without a clean 151/151 — record the composite or keep running?** → *Record the composite.* Each run is 5–7 minutes against a host that was getting slower, not faster (143 was the worst); another run rolls the dice, not the evidence. README Reporting now says exactly what happened instead of claiming a clean number that never occurred. *Why:* a milestone nobody can reproduce is a rumour — and so is one that's quietly rounded up.
+- **Bump `workers` down or the expect timeout up to force a green run?** → *No config change.* The same config ran 147/147 clean on Nov 8; the variable today was the host. Changing config to mask a network day would be treating the symptom — the Nov 8 "load-shaped, not contention-shaped" reasoning still holds.
+- **Targeted re-run overwrote the HTML report** (documented `--list`/filtered-run gotcha) — the final bare run restored it; sequence "filtered run → bare run" is now a hard habit.
+- **CheckoutData table said Sofie · Villalobos while the file said Valid · User** — the README data table rotted when `checkoutData.ts` was updated (commit `ad6e8e4`). Fixed on sight: data tables in docs are pinned values too, subject to the same provenance rule.
+
+**Open / next**
+- Phase 1 polish complete: coverage gap closed, git clean, docs synced, CI verified. **Framework #2 is next** — target chosen by skill gap (API testing / complex UI), not by URL.
+- Optional, not taken up: ESLint (typecheck remains the only static gate); a clean 151/151 single-run record on a good network day.

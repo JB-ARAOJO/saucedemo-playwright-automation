@@ -8,15 +8,21 @@ export const CheckoutData = {
     },
     emptyFirstName:{
         firstname:'',
-        lastname:'Villalobos',
+        lastname:'User',
         postalcode:'4026',
         expectedError:'Error: First Name is required'
     },
     emptyLastName:{
-        firstname:'Sofie',
+        firstname:'Valid',
         lastname:'',
         postalcode:'4026',
         expectedError:'Error: Last Name is required'
+    },
+    emptyPostalCode:{
+        firstname:'Valid',
+        lastname:'User',
+        postalcode:'',
+        expectedError:'Error: Postal Code is required'
     },
     emptyField:{
         expectedError:'Error: First Name is required'
