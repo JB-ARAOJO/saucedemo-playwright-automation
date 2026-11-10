@@ -27,6 +27,12 @@ export const CheckoutData = {
     emptyField:{
         expectedError:'Error: First Name is required'
     },
+    expectedURL:{
+        cartURL: '/cart.html',
+        stepOneURL:'/checkout-step-one.html',
+        stepTwoURL: '/checkout-step-two.html',
+        checkOutCompleteURL: '/checkout-complete.html',
+    },
 
 
 }

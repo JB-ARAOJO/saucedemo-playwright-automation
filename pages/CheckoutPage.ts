@@ -1,5 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
-
+import { CheckoutData } from '../data/checkoutData';
 
 export class CheckoutPage{
         readonly firstNameField: Locator;
@@ -36,8 +36,8 @@ export class CheckoutPage{
         }
 
         async goto(){
-                await this.page.goto('/checkout-step-one.html',{ waitUntil: 'domcontentloaded'});
-                await expect(this.page).toHaveURL('https://www.saucedemo.com/checkout-step-one.html');
+                await this.page.goto(CheckoutData.expectedURL.stepOneURL,{ waitUntil: 'domcontentloaded'});
+                await expect(this.page).toHaveURL(CheckoutData.expectedURL.stepOneURL);
                 
         }
 

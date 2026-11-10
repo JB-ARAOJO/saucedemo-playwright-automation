@@ -38,12 +38,12 @@ export class InventoryPage {
     }
 
     async goto() {
-        await this.page.goto('/inventory.html', { waitUntil: 'domcontentloaded' });
-        await expect(this.page).toHaveURL(InventoryData.expectedURL);
+        await this.page.goto(InventoryData.expectedURL.inventoryURL, { waitUntil: 'domcontentloaded' });
+        await expect(this.page).toHaveURL(InventoryData.expectedURL.inventoryURL);
     }
 
     async expectLoaded() {
-        await expect(this.page).toHaveURL(InventoryData.expectedURL);
+        await expect(this.page).toHaveURL(InventoryData.expectedURL.inventoryURL);
         await expect(this.inventoryContainer).toBeVisible();
         await expect(this.inventoryList).toBeVisible();
         await expect(this.inventoryItems).toHaveCount(InventoryData.expectedItemCount);
@@ -154,7 +154,7 @@ export class InventoryPage {
 
     async backToProducts() {
         await this.backToProductsBtn.click();
-        await expect(this.page).toHaveURL(InventoryData.expectedURL);
+        await expect(this.page).toHaveURL(InventoryData.expectedURL.inventoryURL);
     }
     // Opens the details page and verifies it shows the same product
     async openProductDetails(product: Locator) {
@@ -168,7 +168,7 @@ export class InventoryPage {
     // Cart Journey
     async openCart(){
         await this.page.getByTestId('shopping-cart-link').click();
-        await expect(this.page).toHaveURL(/cart\.html/);
+        await expect(this.page).toHaveURL(InventoryData.expectedURL.cartURL);
     }
 
 }

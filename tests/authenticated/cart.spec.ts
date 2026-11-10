@@ -21,19 +21,19 @@ test.describe('Cart Page', () =>{
      test('Verify continue shop button navigates user to inventory page', async ({cartPage}) => {
         await cartPage.goto();
         await cartPage.clickContinueShopButton();
-        await expect(cartPage.page).toHaveURL(/inventory\.html/);
+        await expect(cartPage.page).toHaveURL(InventoryData.expectedURL.inventoryURL);
     })
      test('Verify user can check out item', async ({inventoryPage, cartPage}) => {
         await inventoryPage.addToCart(inventoryPage.getProductByName(InventoryData.featuredProduct.name));
         await inventoryPage.openCart();
         await cartPage.clickCheckoutButton();
-        await expect(cartPage.page).toHaveURL(/checkout-step-one\.html/);
+        await expect(cartPage.page).toHaveURL(InventoryData.expectedURL.stepOneURL);
     })
 
     test('Verify checkout attempt with no items in cart', async ({cartPage}) => {
         await cartPage.goto();
         await cartPage.clickCheckoutButton();
-        await expect(cartPage.page).toHaveURL(/checkout-step-one\.html/);
+        await expect(cartPage.page).toHaveURL(InventoryData.expectedURL.stepOneURL);
     })
 
 })

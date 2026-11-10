@@ -1,5 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
-
+import { InventoryData } from '../data/inventoryData';
 export class CartPage {
     readonly cartItems: Locator;
     readonly continueShopBtn: Locator;
@@ -14,8 +14,8 @@ export class CartPage {
     }
 
     async goto() {
-            await this.page.goto('/cart.html', { waitUntil: 'domcontentloaded' });
-            await expect(this.page).toHaveURL('https://www.saucedemo.com/cart.html');
+            await this.page.goto(InventoryData.expectedURL.cartURL, { waitUntil: 'domcontentloaded' });
+            await expect(this.page).toHaveURL(InventoryData.expectedURL.cartURL);
         }
     
     async clickCheckoutButton() {

@@ -11,8 +11,8 @@ test.describe('Login Feature', () => {
         const page = await context.newPage();
         const loginPage = new LoginPage(page);
 
-        await page.goto('/inventory.html', { waitUntil: 'domcontentloaded' });
-        await expect(page).toHaveURL('https://www.saucedemo.com/');
+        await page.goto(LoginData.unauthenticatedAccess.inventoryURL, { waitUntil: 'domcontentloaded' });
+        await expect(page).toHaveURL(LoginData.unauthenticatedAccess.loginURL);
         await loginPage.expectError(LoginData.unauthenticatedAccess.expectedError);
 
          await context.close();

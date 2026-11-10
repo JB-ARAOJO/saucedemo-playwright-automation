@@ -13,7 +13,7 @@ async function startCheckoutAtStepOne(inventoryPage: InventoryPage, cartPage: Ca
         await inventoryPage.openCart();
         await cartPage.expectItemInCart(InventoryData.featuredProduct.name);
         await cartPage.clickCheckoutButton();
-        await expect(checkoutPage.page).toHaveURL(/checkout-step-one\.html/);
+        await expect(checkoutPage.page).toHaveURL(CheckoutData.expectedURL.stepOneURL);
         await checkoutPage.expectLoaded();
 } 
 async function submitValidDetails(checkoutPage: CheckoutPage){
@@ -23,7 +23,7 @@ async function submitValidDetails(checkoutPage: CheckoutPage){
         await checkoutPage.fillLastName(checkoutData.lastname);
         await checkoutPage.fillPostalCode(checkoutData.postalcode);
         await checkoutPage.clickContinueBtn();
-        await expect(checkoutPage.page).toHaveURL(/checkout-step-two\.html/);
+        await expect(checkoutPage.page).toHaveURL(CheckoutData.expectedURL.stepTwoURL);
 }
 async function addtoCartTwoItems(inventoryPage: InventoryPage, cartPage: CartPage, checkoutPage: CheckoutPage){
         await inventoryPage.expectLoaded();
@@ -33,7 +33,7 @@ async function addtoCartTwoItems(inventoryPage: InventoryPage, cartPage: CartPag
         await cartPage.expectItemInCart(InventoryData.featuredProduct.name);
         await cartPage.expectItemInCart(InventoryData.featuredProduct2.name);
         await cartPage.clickCheckoutButton();
-        await expect(checkoutPage.page).toHaveURL(/checkout-step-one\.html/);
+        await expect(checkoutPage.page).toHaveURL(CheckoutData.expectedURL.stepOneURL);
         await checkoutPage.expectLoaded();
 }
 
@@ -96,14 +96,14 @@ test.describe('CheckOut Page', () =>{
         await submitValidDetails(checkoutPage);
         await checkoutPage.expectItemInCheckOut(InventoryData.featuredProduct.name);
         await checkoutPage.clickFinishBtn();
-        await expect(checkoutPage.page).toHaveURL(/checkout-complete\.html/);
+        await expect(checkoutPage.page).toHaveURL(CheckoutData.expectedURL.checkOutCompleteURL);
         await checkoutPage.expectCheckoutCompleteMessage(checkoutData.checkoutmessage);
     })
     // cancel functions
     test('Verify cancel button working',async ({inventoryPage, cartPage, checkoutPage}) =>{
         await startCheckoutAtStepOne(inventoryPage, cartPage, checkoutPage);
         await checkoutPage.clickCancelBtn();
-        await expect(checkoutPage.page).toHaveURL(/cart\.html/);
+        await expect(checkoutPage.page).toHaveURL(InventoryData.expectedURL.cartURL);
         await cartPage.expectItemInCart(InventoryData.featuredProduct.name);
     })
 
@@ -111,7 +111,7 @@ test.describe('CheckOut Page', () =>{
         await startCheckoutAtStepOne(inventoryPage, cartPage, checkoutPage);
         await submitValidDetails(checkoutPage);
         await checkoutPage.clickCancelBtn();
-        await expect(checkoutPage.page).toHaveURL(/inventory\.html/);
+        await expect(checkoutPage.page).toHaveURL(InventoryData.expectedURL.inventoryURL);
         await inventoryPage.expectCartBadgeCount(1); 
     })
     
@@ -119,10 +119,10 @@ test.describe('CheckOut Page', () =>{
         await startCheckoutAtStepOne(inventoryPage, cartPage, checkoutPage);
         await submitValidDetails(checkoutPage);
         await checkoutPage.clickFinishBtn();
-        await expect(checkoutPage.page).toHaveURL(/checkout-complete\.html/);
+        await expect(checkoutPage.page).toHaveURL(CheckoutData.expectedURL.checkOutCompleteURL);
         await checkoutPage.expectCheckoutCompleteMessage(CheckoutData.validData.checkoutmessage);
         await checkoutPage.clickBackHomeBtn();
-        await expect(checkoutPage.page).toHaveURL(/inventory\.html/);
+        await expect(checkoutPage.page).toHaveURL(InventoryData.expectedURL.inventoryURL);
         await inventoryPage.expectNoCartBadge();
     })
 

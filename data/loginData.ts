@@ -49,6 +49,8 @@ export const LoginData = {
         expectedURL: '/inventory.html'
     },
     unauthenticatedAccess:{
-        expectedError: "Epic sadface: You can only access '/inventory.html' when you are logged in."
+        expectedError: "Epic sadface: You can only access '/inventory.html' when you are logged in.",
+        loginURL: 'https://www.saucedemo.com',
+        inventoryURL: '/inventory.html',
     }
 };
