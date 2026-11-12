@@ -47,13 +47,13 @@ The framework is deliberately engineered to industry standards:
 |---|---|
 | **Maintainability** | Page Object Model — selectors and actions live in `pages/`, never in specs |
 | **Test isolation** | Playwright fixtures (`test.extend()`) inject page objects per test |
-| **Data-driven testing** | All expected values, credentials and catalog facts live in `data/` |
+| **Data-driven testing** | All expected values, credentials and catalog facts live in `data/`; every URL lives once in `data/routes.ts` |
 | **Auth reuse** | A dedicated `setup` project logs in once and shares `storageState` |
 | **Type safety** | Strict TypeScript (`strict: true`), zero implicit `any` |
 | **Readability** | Specs read as user stories: Arrange → Act → Assert |
 | **Reliability** | Falsifiable guards, scope-safe locators, no debug noise in CI output |
 
-**Suite status (last verified Mon Nov 9 2026):** 46 test cases → **151 test runs** across 6 projects (1 setup + 10 login + 15 inventory + 5 cart + 11 checkout + 4 menu), `fullyParallel: true` + `workers: 4`, `npm run typecheck` clean. Every test verified passing during the Nov 9 session — the host was degraded that day (5 bare runs scored 143–150/151, all failures load-shaped timeouts that passed on re-run; see [Known Limitations](#known-limitations)).
+**Suite status (last verified Thu Nov 12 2026):** 46 test cases → **151/151 passed** in 3.5 min across 6 projects (1 setup + 10 login + 15 inventory + 5 cart + 11 checkout + 4 menu), `fullyParallel: true` + `workers: 4`, `npm run typecheck` clean. The first bare run of this session scored 150/151 — one load-shaped `expectLoaded()` timeout on webkit (zero assertion mismatches) that passed unchanged on re-run; for the Nov 9 degraded-host record (143–150/151 across 5 runs) see [Known Limitations](#known-limitations).
 
 ---
 
@@ -64,6 +64,7 @@ The framework is deliberately engineered to industry standards:
 - ✅ **Storage-state authentication** — login runs once in a `setup` project; authenticated suites reuse the session
 - ✅ **Unauthenticated / authenticated project split** — login tests can never be poisoned by a pre-existing session
 - ✅ **Data-driven expected values** — credentials, error strings, catalog, prices and tax rate live in `data/`
+- ✅ **Centralized routes** — every app URL lives once in `data/routes.ts` (`Routes`); specs, POMs and `playwright.config.ts` all reference it — no route strings in code outside `data/`
 - ✅ **Journey helpers** — shared multi-step flows extracted at spec level (`startCheckoutAtStepOne`, `submitValidDetails`, …)
 - ✅ **Money math in integer cents** — exact `toBe` assertions, no float drift, no `toBeCloseTo`
 - ✅ **Poll-based async assertions** — image-load checks poll `complete && naturalWidth > 0`
@@ -145,6 +146,7 @@ playwright-ts/
 │   └── page.fixture.ts           # test.extend() DI: injects + auto-navigates POMs
 │
 ├── data/                         # TEST DATA (layer 3 — "expected values")
+│   ├── routes.ts                 # Routes: single source of truth for every app URL
 │   ├── loginData.ts
 │   ├── inventoryData.ts
 │   └── checkoutData.ts
@@ -198,7 +200,7 @@ The framework enforces a strict three-layer rule. Every piece of test knowledge 
 | Location | Use for |
 |---|---|
 | Test-local `const` | Values used by exactly one test (default) |
-| `data/*.ts` | Facts that never change — expected text, counts, URLs, credentials |
+| `data/*.ts` | Facts that never change — expected text, counts, credentials; **every URL** lives in `data/routes.ts` (`Routes`) |
 | POM method/reader | Reads needed by 2+ tests, or page invariants (`expectLoaded()`) |
 | Spec-level helper | Multi-step journeys used by 2+ tests in **one** spec |
 | `helpers/` (future) | Journeys shared across **two or more** specs (YAGNI until then) |
@@ -262,10 +264,11 @@ export const test = base.extend<{
         NO storageState                 storageState + dependencies: ['setup']
 ```
 
-- `auth/auth.setup.ts` logs in as `standard_user`, asserts the inventory URL, then writes `storageState`.
+- `auth/auth.setup.ts` logs in as `standard_user`, asserts the inventory URL (`Routes.inventory`, exactly), then writes `storageState`.
 - `config/auth.ts` exports the single source of truth for that path: `STORAGE_STATE = 'playwright/.auth/standardUser.json'`.
 - The `chromium-authenticated` project declares `dependencies: ['setup']`, so Playwright guarantees the session exists **before** any authenticated test runs.
 - The `chromium-unauthenticated` project has **no** `storageState` — login tests start clean, which is essential because they test login itself.
+- SauceDemo's session cookie lasts **~10 minutes** — but `setup` re-runs on every `npm test`, so the stored state is always minutes old within a run (see [Known Limitations](#known-limitations) for the long-run caveat).
 
 ### Helpers vs. Fixtures vs. POMs
 
@@ -331,7 +334,7 @@ Two deliberate styles for reaching the page under test — decided **per test**,
 
 | # | Test | Assertion |
 |---|---|---|
-| 1 | `authenticate` | Login as `standard_user` → URL matches `/inventory/` → persist `storageState` |
+| 1 | `authenticate` | Login as `standard_user` → URL matches `Routes.inventory` exactly → persist `storageState` |
 
 ### 2. Login — `login.spec.ts` (10) · *unauthenticated*
 
@@ -407,31 +410,47 @@ Two deliberate styles for reaching the page under test — decided **per test**,
 
 ## Test Data
 
-All expected values are centralized in `data/` — specs and POMs contain **no raw expected strings**.
+All expected values are centralized in `data/` — specs and POMs contain **no raw expected strings**, and every URL lives once in `data/routes.ts`.
+
+### `data/routes.ts` — `Routes`
+
+The single source of truth for application URLs. Imported by page objects, specs, `auth.setup.ts` **and** `playwright.config.ts` (`baseURL: Routes.base`).
+
+| Key | Value | Used for |
+|---|---|---|
+| `base` | `https://www.saucedemo.com` | Config `baseURL`; post-redirect assertions (login, logout) |
+| `login` | `/` | Setup project's initial navigation |
+| `inventory` | `/inventory.html` | Inventory page + every post-login redirect |
+| `inventoryItem` | `/inventory-item\.html/` — **regex** | Details page — see note below |
+| `cart` | `/cart.html` | Cart page |
+| `checkoutStepOne` | `/checkout-step-one.html` | Checkout form |
+| `checkoutStepTwo` | `/checkout-step-two.html` | Order overview |
+| `checkoutComplete` | `/checkout-complete.html` | Confirmation page |
+| `about` | `https://saucelabs.com/` | About link target |
+
+> ⚠️ **Why one route is a regex:** `toHaveURL(string)` resolves the string against `baseURL` and then compares it for **exact equality** with the page URL — it is *not* a glob. The details page appends a product id (`/inventory-item.html?id=4`), so a string can never match it. A regex is matched as a substring pattern, so `Routes.inventoryItem` is a `RegExp` on purpose. Everything else is an exact, query-free path.
 
 ### `data/loginData.ts` — `LoginData`
 
 | Key | Username | Password | Expected |
 |---|---|---|---|
-| `validUser` | `standard_user` | `secret_sauce` | URL `/inventory.html` |
+| `validUser` | `standard_user` | `secret_sauce` | URL → `Routes.inventory` |
 | `invalidUser` | `invalid_user` | `secret_sauce` | *Username and password do not match any user in this service* |
 | `emptyUser` | *(empty)* | `secret_sauce` | *Epic sadface: Username is required* |
 | `emptyPassword` | `standard_user` | *(empty)* | *Epic sadface: Password is required* |
 | `lockedOutUser` | `locked_out_user` | `secret_sauce` | *Epic sadface: Sorry, this user has been locked out.* |
-| `problemUser` | `problem_user` | `secret_sauce` | URL `/inventory.html` |
-| `performanceGlitchUser` | `performance_glitch_user` | `secret_sauce` | URL `/inventory.html` |
-| `errorUser` | `error_user` | `secret_sauce` | URL `/inventory.html` |
-| `visualUser` | `visual_user` | `secret_sauce` | URL `/inventory.html` |
-| `unauthenticatedAccess` | — | — | *Epic sadface: You can only access '/inventory.html' when you are logged in.* |
+| `problemUser` | `problem_user` | `secret_sauce` | URL → `Routes.inventory` |
+| `performanceGlitchUser` | `performance_glitch_user` | `secret_sauce` | URL → `Routes.inventory` |
+| `errorUser` | `error_user` | `secret_sauce` | URL → `Routes.inventory` |
+| `visualUser` | `visual_user` | `secret_sauce` | URL → `Routes.inventory` |
+| `unauthenticatedAccess` | — | — | *Epic sadface: You can only access '/inventory.html' when you are logged in.* (navigated via `Routes.inventory`, expected landing `Routes.base`) |
 
 ### `data/inventoryData.ts` — `InventoryData`
 
 | Key | Value |
 |---|---|
-| `expectedURL` | `/inventory.html` |
 | `expectedItemCount` | `6` |
 | `expectedCartBadgeCount` | `1` |
-| `expectedDetailsURL` | `/inventory-item.html` |
 | `sortOptions.nameAToZ` / `priceLowToHigh` | `az` / `lohi` |
 | `expectedNamesAToZ` | Sauce Labs Backpack · Bike Light · Bolt T-Shirt · Fleece Jacket · Onesie · Test.allTheThings() T-Shirt (Red) |
 | `expectedPricesLowToHigh` | `$7.99 · $9.99 · $15.99 · $15.99 · $29.99 · $49.99` |
@@ -439,7 +458,6 @@ All expected values are centralized in `data/` — specs and POMs contain **no r
 | `featuredProduct` | Sauce Labs Backpack · `$29.99` · *carry.allTheThings()…* |
 | `featuredProduct2` | Sauce Labs Bike Light · `$9.99` |
 | `featuredProduct3` | Sauce Labs Fleece Jacket · `$49.99` |
-| `AboutPage.url` | `https://saucelabs.com/` |
 
 ### `data/checkoutData.ts` — `CheckoutData`
 
@@ -463,7 +481,7 @@ All expected values are centralized in `data/` — specs and POMs contain **no r
 | Setting | Value | Notes |
 |---|---|---|
 | `testDir` | `'.'` | Projects narrow it via `testMatch` |
-| `baseURL` | `https://www.saucedemo.com` | All `goto()` calls are relative |
+| `baseURL` | `Routes.base` → `https://www.saucedemo.com` | Imported from `data/routes.ts` — the domain is defined once; all `goto()` calls are relative |
 | `testIdAttribute` | `data-test` | `getByTestId()` maps to `data-test` |
 | `fullyParallel` | `true` | Tests within a file run in parallel too — up to `workers` at a time |
 | `workers` | `4` | 4 tests in flight at once (kept at 4 deliberately; verified green) |
@@ -531,7 +549,7 @@ npx playwright test --list
 - **HTML report** → `playwright-report/index.html` (open via `npm run report`), plus live console output from the `list` reporter
 - **Traces** → captured `retain-on-failure`; inspect with `npx playwright show-trace test-results/<test>/trace.zip`
 - **Artifacts on failure** → `test-results/`
-- **Last verified session** (Mon Nov 9 2026): 46 cases → 151 runs; `npm run typecheck` clean — with `fullyParallel: true` and `workers: 4`. Caveat: saucedemo.com was degraded that day — 5 bare runs scored 143–150/151 with all 18 failures load-shaped timeouts (no assertion mismatches), each failure passed again on re-run or in another run. For a clean single-run record see the Nov 8 entry in [`PROGRESS.md`](PROGRESS.md) (147/147 at the time, 45 cases).
+- **Last verified session** (Thu Nov 12 2026): bare `npm test` → **151/151 passed (3.5m)**, `npm run typecheck` clean — with `fullyParallel: true` and `workers: 4`. The preceding bare run scored 150/151: a single load-shaped `expectLoaded()` timeout on webkit (zero assertion mismatches, the failure class documented in [Known Limitations](#known-limitations)) that passed unchanged on re-run. The Nov 9 degraded-host record (143–150/151 across 5 bare runs) lives in [`PROGRESS.md`](PROGRESS.md).
 
 ---
 
@@ -557,7 +575,8 @@ npx playwright test --list
 
 ### In data files
 
-- Typed exported consts (`LoginData`, `InventoryData`, `CheckoutData`).
+- Typed exported consts (`Routes`, `LoginData`, `InventoryData`, `CheckoutData`).
+- **URLs belong to `Routes`** — never a path or domain string in a spec, POM or config; import `Routes` instead. One route, one file, one edit point.
 - Expected strings copied exactly from the live app (watch for double spaces!).
 - Pinned lists are acceptable for *catalog content*; derived transforms (Z→A etc.) compute the expectation from visible values instead — avoid a second pinned list that can rot.
 
@@ -589,6 +608,7 @@ Condensed from the framework's build journal ([`PROGRESS.md`](PROGRESS.md)):
 
 - **Cross-browser, but not exhaustive** — the 35 authenticated tests run on Chromium, Firefox, WebKit and Mobile Chrome (151 runs); login stays Chromium-only by design (session behaviour isn't browser-specific), and Mobile Safari / Pixel 5 on iOS are still commented out.
 - **Live-site dependency** — tests hit `saucedemo.com`; duration and stability depend on the public host (observed swings: 38 s → 9.8 min for the identical suite). A run on Nov 8 failed on `Test timeout of 30000ms exceeded` with zero assertion mismatches and passed unchanged on re-run — a network blip, not a code defect. Locally `retries: 0`, so there is no second chance; re-run before debugging.
+- **Storage state lives ~10 minutes** — SauceDemo's `session-username` cookie expires about 10 minutes after login. Because `setup` re-logins at the start of every `npm test`, the state is always fresh within a normal run; a run whose authenticated phase outlasts the TTL, or an ad-hoc run with `--no-deps` against an old `playwright/.auth/standardUser.json`, will silently redirect to the login page instead of the expected page.
 - **Pinned data can rot** — catalog prices/URLs must be re-verified when the site changes.
 
 ---
@@ -603,6 +623,8 @@ Condensed from the framework's build journal ([`PROGRESS.md`](PROGRESS.md)):
 | Test fails "element not visible" at step 2 | Construct-only fixture (`cartPage`/`checkoutPage`/`menuPage`) didn't navigate | Call `goto()` (Style B) or arrive through the journey (Style A) |
 | `resolved to N elements` strict-mode error | Locator matches shared testids across components | Scope under a unique container (CSS class if no unique testid) |
 | Assertion fails with a wrong-looking expected string | Value typed from memory (e.g. double space) | Copy the exact string from DevTools / live bundle |
+| `toHaveURL` fails: Expected `…/inventory-item.html` vs Received `…/inventory-item.html?id=4` | `toHaveURL(string)` resolves against `baseURL` then compares **exactly** — it is not a glob, so wildcards (`*`) don't work | Use a regex for routes with query params — `Routes.inventoryItem` = `/inventory-item\.html/` (see [Test Data](#test-data)) |
+| Expected shows a trailing slash (`…html/`) on a route that has none | The regex was written **inside quotes** — `'…\.html/'` is a plain string: `\.` collapses to `.` and the closing `/` becomes a literal path segment | Regex literals are unquoted: `/inventory-item\.html/` |
 | `expect(prices.length).toBe(n)` receives `0` | Non-waiting snapshot read (`allTextContents()` doesn't auto-wait) | Wait for visibility first, or use the auto-waiting `expectItemCount(n)` (see [Design Principles #11](#design-principles)) |
 | Menu test fails `Received: hidden` on `.bm-menu-wrap` right after clicking **Open Menu** | `react-burger-menu` re-applies `[hidden]` ~500 ms after mount (app defect) | 600 ms guard in `MenuPage.openSidebarMenu()` — see [Bug 1](#bugs-encounteredfound) |
 | Report shows all tests *skipped*, ~100 ms | `--list` (or any run) overwrote the report | Run a bare `npm test` |

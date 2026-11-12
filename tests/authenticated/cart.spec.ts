@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures/page.fixture';
 import { InventoryData } from '../../data/inventoryData';
+import { Routes } from '../../data/routes';
 
 
 test.describe('Cart Page', () =>{
@@ -21,19 +22,19 @@ test.describe('Cart Page', () =>{
      test('Verify continue shop button navigates user to inventory page', async ({cartPage}) => {
         await cartPage.goto();
         await cartPage.clickContinueShopButton();
-        await expect(cartPage.page).toHaveURL(InventoryData.expectedURL.inventoryURL);
+        await expect(cartPage.page).toHaveURL(Routes.inventory);
     })
      test('Verify user can check out item', async ({inventoryPage, cartPage}) => {
         await inventoryPage.addToCart(inventoryPage.getProductByName(InventoryData.featuredProduct.name));
         await inventoryPage.openCart();
         await cartPage.clickCheckoutButton();
-        await expect(cartPage.page).toHaveURL(InventoryData.expectedURL.stepOneURL);
+        await expect(cartPage.page).toHaveURL(Routes.checkoutStepOne);
     })
 
     test('Verify checkout attempt with no items in cart', async ({cartPage}) => {
         await cartPage.goto();
         await cartPage.clickCheckoutButton();
-        await expect(cartPage.page).toHaveURL(InventoryData.expectedURL.stepOneURL);
+        await expect(cartPage.page).toHaveURL(Routes.checkoutStepOne);
     })
 
 })

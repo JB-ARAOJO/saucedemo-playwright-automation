@@ -1,5 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
-import { InventoryData } from '../data/inventoryData';
+import { Routes } from '../data/routes';
 
 export class MenuPage {
     readonly menuBurgerBtn: Locator;
@@ -59,11 +59,11 @@ export class MenuPage {
     }
 
     async expectAboutPageLoaded(){
-        await expect(this.page).toHaveURL(InventoryData.AboutPage.url);
+        await expect(this.page).toHaveURL(Routes.about);
     }
 
     async expectLogout(){
-        await expect(this.page).toHaveURL('');
+        await expect(this.page).toHaveURL(Routes.base);
         
     }
 

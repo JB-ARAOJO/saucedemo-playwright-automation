@@ -2,7 +2,6 @@ export const LoginData = {
     validUser: {
         username: 'standard_user',
         password: 'secret_sauce',
-        expectedURL: '/inventory.html'
     },
     invalidUser: {
         username: 'invalid_user',
@@ -31,26 +30,20 @@ export const LoginData = {
     problemUser: {
         username: 'problem_user',
         password: 'secret_sauce',
-        expectedURL: '/inventory.html'
     },
     performanceGlitchUser: {
         username: 'performance_glitch_user',
         password: 'secret_sauce',
-        expectedURL: '/inventory.html'
     },
     errorUser: {
         username: 'error_user',
         password: 'secret_sauce',
-        expectedURL: '/inventory.html'
     },
     visualUser: {
         username: 'visual_user',
         password: 'secret_sauce',
-        expectedURL: '/inventory.html'
     },
     unauthenticatedAccess:{
         expectedError: "Epic sadface: You can only access '/inventory.html' when you are logged in.",
-        loginURL: 'https://www.saucedemo.com',
-        inventoryURL: '/inventory.html',
     }
 };

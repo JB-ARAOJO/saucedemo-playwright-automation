@@ -4,6 +4,7 @@ import { CheckoutData } from '../../data/checkoutData';
 import { InventoryData } from '../../data/inventoryData';
 import { InventoryPage } from '../../pages/InventoryPage';
 import { CartPage } from '../../pages/CartPage';
+import { Routes } from '../../data/routes';
 
 
 //helper checkout journey
@@ -13,7 +14,7 @@ async function startCheckoutAtStepOne(inventoryPage: InventoryPage, cartPage: Ca
         await inventoryPage.openCart();
         await cartPage.expectItemInCart(InventoryData.featuredProduct.name);
         await cartPage.clickCheckoutButton();
-        await expect(checkoutPage.page).toHaveURL(CheckoutData.expectedURL.stepOneURL);
+        await expect(checkoutPage.page).toHaveURL(Routes.checkoutStepOne);
         await checkoutPage.expectLoaded();
 } 
 async function submitValidDetails(checkoutPage: CheckoutPage){
@@ -23,7 +24,7 @@ async function submitValidDetails(checkoutPage: CheckoutPage){
         await checkoutPage.fillLastName(checkoutData.lastname);
         await checkoutPage.fillPostalCode(checkoutData.postalcode);
         await checkoutPage.clickContinueBtn();
-        await expect(checkoutPage.page).toHaveURL(CheckoutData.expectedURL.stepTwoURL);
+        await expect(checkoutPage.page).toHaveURL(Routes.checkoutStepTwo);
 }
 async function addtoCartTwoItems(inventoryPage: InventoryPage, cartPage: CartPage, checkoutPage: CheckoutPage){
         await inventoryPage.expectLoaded();
@@ -33,7 +34,7 @@ async function addtoCartTwoItems(inventoryPage: InventoryPage, cartPage: CartPag
         await cartPage.expectItemInCart(InventoryData.featuredProduct.name);
         await cartPage.expectItemInCart(InventoryData.featuredProduct2.name);
         await cartPage.clickCheckoutButton();
-        await expect(checkoutPage.page).toHaveURL(CheckoutData.expectedURL.stepOneURL);
+        await expect(checkoutPage.page).toHaveURL(Routes.checkoutStepOne);
         await checkoutPage.expectLoaded();
 }
 
@@ -96,14 +97,14 @@ test.describe('CheckOut Page', () =>{
         await submitValidDetails(checkoutPage);
         await checkoutPage.expectItemInCheckOut(InventoryData.featuredProduct.name);
         await checkoutPage.clickFinishBtn();
-        await expect(checkoutPage.page).toHaveURL(CheckoutData.expectedURL.checkOutCompleteURL);
+        await expect(checkoutPage.page).toHaveURL(Routes.checkoutComplete);
         await checkoutPage.expectCheckoutCompleteMessage(checkoutData.checkoutmessage);
     })
     // cancel functions
     test('Verify cancel button working',async ({inventoryPage, cartPage, checkoutPage}) =>{
         await startCheckoutAtStepOne(inventoryPage, cartPage, checkoutPage);
         await checkoutPage.clickCancelBtn();
-        await expect(checkoutPage.page).toHaveURL(InventoryData.expectedURL.cartURL);
+        await expect(checkoutPage.page).toHaveURL(Routes.cart);
         await cartPage.expectItemInCart(InventoryData.featuredProduct.name);
     })
 
@@ -111,7 +112,7 @@ test.describe('CheckOut Page', () =>{
         await startCheckoutAtStepOne(inventoryPage, cartPage, checkoutPage);
         await submitValidDetails(checkoutPage);
         await checkoutPage.clickCancelBtn();
-        await expect(checkoutPage.page).toHaveURL(InventoryData.expectedURL.inventoryURL);
+        await expect(checkoutPage.page).toHaveURL(Routes.inventory);
         await inventoryPage.expectCartBadgeCount(1); 
     })
     
@@ -119,10 +120,10 @@ test.describe('CheckOut Page', () =>{
         await startCheckoutAtStepOne(inventoryPage, cartPage, checkoutPage);
         await submitValidDetails(checkoutPage);
         await checkoutPage.clickFinishBtn();
-        await expect(checkoutPage.page).toHaveURL(CheckoutData.expectedURL.checkOutCompleteURL);
+        await expect(checkoutPage.page).toHaveURL(Routes.checkoutComplete);
         await checkoutPage.expectCheckoutCompleteMessage(CheckoutData.validData.checkoutmessage);
         await checkoutPage.clickBackHomeBtn();
-        await expect(checkoutPage.page).toHaveURL(InventoryData.expectedURL.inventoryURL);
+        await expect(checkoutPage.page).toHaveURL(Routes.inventory);
         await inventoryPage.expectNoCartBadge();
     })
 

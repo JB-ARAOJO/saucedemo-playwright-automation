@@ -1,6 +1,7 @@
 import { test, expect } from '../../fixtures/page.fixture';
 import { LoginPage } from '../../pages/LoginPage';
 import { LoginData } from '../../data/loginData';
+import { Routes } from '../../data/routes';
 
 
 test.describe('Login Feature', () => {
@@ -11,8 +12,8 @@ test.describe('Login Feature', () => {
         const page = await context.newPage();
         const loginPage = new LoginPage(page);
 
-        await page.goto(LoginData.unauthenticatedAccess.inventoryURL, { waitUntil: 'domcontentloaded' });
-        await expect(page).toHaveURL(LoginData.unauthenticatedAccess.loginURL);
+        await page.goto(Routes.inventory, { waitUntil: 'domcontentloaded' });
+        await expect(page).toHaveURL(Routes.base);
         await loginPage.expectError(LoginData.unauthenticatedAccess.expectedError);
 
          await context.close();
@@ -25,7 +26,7 @@ test.describe('Login Feature', () => {
            user.username,   
            user.password
         );
-    await expect(page).toHaveURL(user.expectedURL);
+    await expect(page).toHaveURL(Routes.inventory);
     });
 
     test('Verify Unsuccessful Login', async ({ loginPage, page }) => {
@@ -77,7 +78,7 @@ test.describe('Login Feature', () => {
            problemUser.username,   
            problemUser.password
         );
-    await expect(page).toHaveURL(problemUser.expectedURL);
+    await expect(page).toHaveURL(Routes.inventory);
     });
     test('Verify Performance Glitch Login', async ({ loginPage, page }) => {
     //Fill Credentials and Click Login
@@ -86,7 +87,7 @@ test.describe('Login Feature', () => {
            performanceGlitchUser.username,   
            performanceGlitchUser.password
         );
-    await expect(page).toHaveURL(performanceGlitchUser.expectedURL);
+    await expect(page).toHaveURL(Routes.inventory);
     });
     test('Verify Error User Login', async ({ loginPage, page }) => {
         //Fill Credentials and Click Login
@@ -95,7 +96,7 @@ test.describe('Login Feature', () => {
             errorUser.username,   
             errorUser.password
             );
-    await expect(page).toHaveURL(errorUser.expectedURL);
+    await expect(page).toHaveURL(Routes.inventory);
     });
     test('Verify Visual User Login', async ({ loginPage, page }) => {
     //Fill Credentials and Click Login
@@ -104,7 +105,7 @@ test.describe('Login Feature', () => {
            visualUser.username,   
            visualUser.password
         );
-    await expect(page).toHaveURL(visualUser.expectedURL);
+    await expect(page).toHaveURL(Routes.inventory);
     });
 
     

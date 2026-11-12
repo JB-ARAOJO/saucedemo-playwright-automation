@@ -1,6 +1,6 @@
 import { Page, Locator, expect } from '@playwright/test';
 import { InventoryData } from '../data/inventoryData';
-
+import { Routes } from '../data/routes';
 export class InventoryPage {
 
     readonly inventoryContainer: Locator;
@@ -38,12 +38,12 @@ export class InventoryPage {
     }
 
     async goto() {
-        await this.page.goto(InventoryData.expectedURL.inventoryURL, { waitUntil: 'domcontentloaded' });
-        await expect(this.page).toHaveURL(InventoryData.expectedURL.inventoryURL);
+        await this.page.goto(Routes.inventory, { waitUntil: 'domcontentloaded' });
+        await expect(this.page).toHaveURL(Routes.inventory);
     }
 
     async expectLoaded() {
-        await expect(this.page).toHaveURL(InventoryData.expectedURL.inventoryURL);
+        await expect(this.page).toHaveURL(Routes.inventory);
         await expect(this.inventoryContainer).toBeVisible();
         await expect(this.inventoryList).toBeVisible();
         await expect(this.inventoryItems).toHaveCount(InventoryData.expectedItemCount);
@@ -154,21 +154,21 @@ export class InventoryPage {
 
     async backToProducts() {
         await this.backToProductsBtn.click();
-        await expect(this.page).toHaveURL(InventoryData.expectedURL.inventoryURL);
+        await expect(this.page).toHaveURL(Routes.inventory);
     }
     // Opens the details page and verifies it shows the same product
     async openProductDetails(product: Locator) {
         const productName  = await this.getProductName(product);
         const productPrice = await product.getByTestId('inventory-item-price').innerText();
         await product.getByTestId('inventory-item-name').click();
-        await expect(this.page).toHaveURL(InventoryData.expectedDetailsURL);
+        await expect(this.page).toHaveURL(Routes.inventoryItem);
         await expect(this.detailsName).toHaveText(productName);
         await expect(this.detailsPrice).toHaveText(productPrice);
     }
     // Cart Journey
     async openCart(){
         await this.page.getByTestId('shopping-cart-link').click();
-        await expect(this.page).toHaveURL(InventoryData.expectedURL.cartURL);
+        await expect(this.page).toHaveURL(Routes.cart);
     }
 
 }

@@ -1,7 +1,6 @@
 export const InventoryData = {
     expectedItemCount: 6,
     expectedCartBadgeCount: 1,
-    expectedDetailsURL: /inventory-item\.html/,
     sortOptions: {
         nameAToZ: 'az',
         priceLowToHigh: 'lohi',
@@ -44,13 +43,5 @@ export const InventoryData = {
         name: 'Sauce Labs Fleece Jacket',
         price: '$49.99',
         description: 'It\'s not every day that you come across a midweight quarter-zip fleece jacket capable of handling everything from a relaxing day outdoors to a busy day at the office.',
-    },
-    expectedURL:{
-        inventoryURL: '/inventory.html',
-        cartURL: '/cart.html',
-        stepOneURL:'/checkout-step-one.html',
-    },
-    AboutPage:{
-        url: 'https://saucelabs.com/'
     },
 };
